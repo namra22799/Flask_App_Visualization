@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+            <!-- Chart for number of vehicles by make -->
+            <h3 class="my-3 golder-color">
+                Number of vehicles make by company
+            </h3>
+            <hr>
+            <div>
+                <canvas id="barChart" height="500"></canvas>
+            </div>
+            <!-- Display the histogram for Avarage price by state -->
+            <h3 class="my-3 golder-color">
+                Avarage car price by state
+            </h3>
+            <hr>
+            <div>
+                <canvas id="statePriceBarChart" height="500"></canvas>
+            </div>
+            <!-- Display the histogram for vehicle years -->
+            <h3 class="my-3 golder-color">
+                Number of vehicles per year
+            </h3>
+            <hr>
+            <div>
+                <canvas id="yearHistogram" height="500"></canvas>
+            </div>
+        
+            <!-- Display the histogram for avarage price for state -->
+            <h3 class="my-3 golder-color">
+                Number of vehicles by type
+            </h3>
+            <hr>
+            <div>
+                <canvas id="vehicleTypePieChart" height="500"></canvas>
+            </div>
+    </div>
+    <footer class="text-center footer-background py-3">
+        <p class="mt-3">&copy; 2023 @XYZ. All rights reserved.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const data = {{ data | tojson }};
+
+        // Function to create datasets for histograms
+        const createHistogramData = (field) => {
+            const fieldValues = data.map(item => item[field]);
+            const counts = {};
+            fieldValues.forEach(value => {
+                if (value in counts) {
+                    counts[value]++;
+                } else {
+                    counts[value] = 1;
+                }
+            });
+            return {
+                labels: Object.keys(counts),
+                datasets: [{
+                    label: `Number of Vehicles by ${field}`,
+                    data: Object.values(counts),
+                    backgroundColor: 'rgba(218,165,32, 0.2)',
+                    borderColor: 'rgba(218,165,32, 1)',
+                    borderWidth: 1
+                }]
+            };
+        };
+
+        // Chart for number of vehicles by make
+        const makeCounts = createHistogramData('make');
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: makeCounts.labels,
+                datasets: makeCounts.datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Chart for distribution of vehicle prices
+        // const priceData = createHistogramData('price');
+        // const ctxPrice = document.getElementById('priceHistogram').getContext('2d');
+        // new Chart(ctxPrice, {
+        //     type: 'bar', // Change the type to 'bar' for a bar chart
+        //     data: {
+        //         labels: priceData.labels,
+        //         datasets: priceData.datasets
+        //     },
+        //     options: {
+        //         responsive: true,
+        //         maintainAspectRatio: false,
+        //         scales: {
+        //             x: {
+        //                 title: {
+        //                     display: true,
+        //                     text: 'Price'
+        //                 }
+        //             },
+        //             y: {
+        //                 title: {
+        //                     display: true,
+        //                     text: 'Number of Vehicles'
+        //                 }
+        //             }
+        //         }
+        //     }
+        // });
+
+        // Chart for distribution of avarage vehicle prices by state
+        const statePriceData = {};
+        data.forEach(item => {
+            const state = item.state;
+            const price = item.price;
+            if (!statePriceData[state]) {
+                statePriceData[state] = {
+                    total: price,
+                        count: 1
+                    };
+                } else {
+                    statePriceData[state].total += price;
+                    statePriceData[state].count++;
+                }
+        });
+        // Calculate average price for each state
+        const averagePriceByState = {};
+        for (const state in statePriceData) {
+            averagePriceByState[state] = statePriceData[state].total / statePriceData[state].count;
+        }
+
+        // Prepare data for bar chart
+        const stateLabels = Object.keys(averagePriceByState);
+        const averagePrices = stateLabels.map(state => averagePriceByState[state]);
+
+        // Create a bar chart for average car price by state
+        const ctxStatePrice = document.getElementById('statePriceBarChart').getContext('2d');
+            new Chart(ctxStatePrice, {
+            type: 'bar',
+            data: {
+                labels: stateLabels,
+                datasets: [{
+                    label: 'Average Car Price',
+                    data: averagePrices,
+                    backgroundColor: '#d4af37',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'State'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Average Car Price'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart for distribution of vehicle years
+        const yearData = createHistogramData('year');
+        const ctxYear = document.getElementById('yearHistogram').getContext('2d');
+        new Chart(ctxYear, {
+            type: 'bar', // Change the type to 'bar' for a bar chart
+            data: {
+                labels: yearData.labels,
+                datasets: yearData.datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Number of Vehicles'
+                        }
+                    }
+                }
+            }
+        });
+
+        //Pie Chart for vehicle types
+
+        const vehicleTypeCounts = {};
+        data.forEach(item => {
+            const vehicleType = item.vehicle_type;
+            if (!vehicleTypeCounts[vehicleType]) {
+                vehicleTypeCounts[vehicleType] = 1;
+            } else {
+                vehicleTypeCounts[vehicleType]++;
+            }
+        });
+
+        const vehicleTypeLabels = Object.keys(vehicleTypeCounts);
+        const vehicleTypeData = vehicleTypeLabels.map(type => vehicleTypeCounts[type]);
+
+        const ctxVehicleType = document.getElementById('vehicleTypePieChart').getContext('2d');
+        new Chart(ctxVehicleType, {
+            type: 'pie',
+            data: {
+                labels: vehicleTypeLabels,
+                datasets: [{
+                    data: vehicleTypeData,
+                    backgroundColor: [
+                    '#C0C0C0', '#FFAC33', '#D4AF37'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+{% endblock %}

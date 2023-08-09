@@ -1,0 +1,35 @@
+table {
+    padding: 20px;
+}
+
+.golder-color{
+    color: #d4af37 !important;
+}
+.golder-background{
+    background-image: linear-gradient(#d4af37, white);
+    background-color: #d4af37;
+    color: white;
+}
+
+.footer-background{
+    background-image: linear-gradient(white,#d4af37);
+    /* background-color: #d4af37; */
+    color: white;
+}
+
+.nav-link:hover{
+    color: #d4af37 !important;
+}
+
+.card:hover{
+    transform: ox-shadow 0.3s ease-in-out;   
+    box-shadow: 0 4px 4px 0 rgba(233, 196, 104, 0.105), 0 4px 15px 0 rgba(218, 165, 32, 0.228);
+}
+
+.card{
+    border: 1px solid #d4af3771;
+}
+
+.card-footer{
+    background-color: #d4af3749;
+}
